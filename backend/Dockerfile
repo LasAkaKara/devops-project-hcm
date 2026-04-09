@@ -25,3 +25,25 @@
 # ===========================================
 
 # YOUR CODE HERE:
+
+# Stage 1: builder (install all deps,bring in source)
+FROM node:18-alpine AS builder
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+
+# Stage 2: production (prod deps only + app code)
+FROM node:18-alpine AS production
+WORKDIR /app
+
+COPY --from=builder /app/package*.json ./
+RUN npm ci --only=production
+
+COPY --from=builder /app/server.js ./server.js
+
+EXPOSE 8080
+
+CMD ["npm", "start"]
